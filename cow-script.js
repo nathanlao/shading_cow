@@ -382,7 +382,7 @@ function setEventListeners(canvas) {
     canvas.addEventListener("mousedown", function (event) {
         // Left mouse button press to handle X and Y translation.
         if (event.button === 0) { 
-            console.log("left click");
+            // console.log("left click");
 
             var startX = event.clientX;
             var startY = event.clientY;
@@ -405,7 +405,7 @@ function setEventListeners(canvas) {
             }
              // Right mouse button press to handle X and Y Rotation.
         } else if (event.button === 2) { 
-            console.log("right click");
+            // console.log("right click");
 
             var startX = event.clientX;
             var startY = event.clientY;
