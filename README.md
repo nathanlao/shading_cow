@@ -10,3 +10,6 @@ https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientY
 https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
 
 https://www.tutorialspoint.com/how-to-disable-right-clicking-on-a-website-using-javascript#:~:text=The%20event%20listener%20function%20cancels,the%20context%20menu%20from%20appearing.
+
+### 3D rotation
+https://www.geeksforgeeks.org/computer-graphics-3d-rotation-transformations/
