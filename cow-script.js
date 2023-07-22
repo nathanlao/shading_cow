@@ -67,48 +67,54 @@ function createCowData() {
 
 // Used to represent the light source.
 var lightPositions = [
-    vec3(5, 6, 2),   // Light source 1 position
+    vec3(8, 6, 2),   // Light source 1 position
     vec3(-1, 10, -1)  // Light source 2 position 
 ];
 
 function createLightSourceData() {
-    // Create a wireframe cube representing the light source.
-    const cubeSize = 0.4;
+    const coneHeight = 1;
+    const coneRadius = 0.3;
+    const coneSegments = 20;
 
     for (var i = 0; i < lightPositions.length; i++) {
         var lightPos = lightPositions[i];
 
-        // Vertices of the cube centered at the light position
-        var vertices = [
-            vec3(lightPos[0] - cubeSize, lightPos[1] - cubeSize, lightPos[2] - cubeSize), // Front bottom left
-            vec3(lightPos[0] + cubeSize, lightPos[1] - cubeSize, lightPos[2] - cubeSize), // Front bottom right
-            vec3(lightPos[0] - cubeSize, lightPos[1] + cubeSize, lightPos[2] - cubeSize), // Front top left
-            vec3(lightPos[0] + cubeSize, lightPos[1] + cubeSize, lightPos[2] - cubeSize), // Front top right
-            vec3(lightPos[0] - cubeSize, lightPos[1] - cubeSize, lightPos[2] + cubeSize), // Back bottom left
-            vec3(lightPos[0] + cubeSize, lightPos[1] - cubeSize, lightPos[2] + cubeSize), // Back bottom right
-            vec3(lightPos[0] - cubeSize, lightPos[1] + cubeSize, lightPos[2] + cubeSize), // Back top left
-            vec3(lightPos[0] + cubeSize, lightPos[1] + cubeSize, lightPos[2] + cubeSize)  // Back top right
-        ];
+        // Create vertices for the cone centered at the light position
+        for (var j = 0; j < coneSegments; j++) {
+            var angle = (j * 2 * Math.PI) / coneSegments;
+            var nextAngle = ((j + 1) * 2 * Math.PI) / coneSegments;
 
-        // Wireframe edges of the cube 
-        var edges = [
-            [0, 1], [1, 3], [3, 2], [2, 0], // Front 
-            [4, 5], [5, 7], [7, 6], [6, 4], // Back 
-            [0, 4], [1, 5], [2, 6], [3, 7] 
-        ];
+            var x1 = lightPos[0] + coneRadius * Math.cos(angle);
+            var y1 = lightPos[1];
+            var z1 = lightPos[2] + coneRadius * Math.sin(angle);
 
-        // Add cube vertices to the positions array
-        for (var j = 0; j < edges.length; j++) {
-            var edge = edges[j];
-            var v1 = vertices[edge[0]];
-            var v2 = vertices[edge[1]];
+            var x2 = lightPos[0] + coneRadius * Math.cos(nextAngle);
+            var y2 = lightPos[1];
+            var z2 = lightPos[2] + coneRadius * Math.sin(nextAngle);
 
-            positions.push(v1[0], v1[1], v1[2]);
-            positions.push(v2[0], v2[1], v2[2]);
+            var x3 = lightPos[0];
+            var y3 = lightPos[1] + coneHeight;
+            var z3 = lightPos[2];
 
-            // Yellow uniform color for each vertex representing the light source.
-            colors.push(1.0, 1.0, 0.0, 1.0); 
-            colors.push(1.0, 1.0, 0.0, 1.0); 
+            // Base triangle
+            positions.push(x1, y1, z1);
+            positions.push(x2, y2, z2);
+            positions.push(x3, y3, z3);
+
+            // Yellow color for each vertex
+            colors.push(1.0, 1.0, 0.0, 1.0);
+            colors.push(1.0, 1.0, 0.0, 1.0);
+            colors.push(1.0, 1.0, 0.0, 1.0);
+
+            // Side triangle
+            positions.push(lightPos[0], lightPos[1], lightPos[2]);
+            positions.push(x1, y1, z1);
+            positions.push(x2, y2, z2);
+
+            // Yellow color for each vertex
+            colors.push(1.0, 1.0, 0.0, 1.0);
+            colors.push(1.0, 1.0, 0.0, 1.0);
+            colors.push(1.0, 1.0, 0.0, 1.0);
         }
     }
 }
