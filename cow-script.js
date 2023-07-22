@@ -6,6 +6,7 @@ var canvas;
 var angle;
 var angularSpeed;
 
+// Vertex positions and colors of the cow model
 var positions = [];
 var colors = [];
 
