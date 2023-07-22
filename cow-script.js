@@ -460,6 +460,22 @@ function setEventListeners(canvas) {
             rotationZ -= 5.0;
         }
     });
+
+    // Press r to reset initial location and orientation.
+    window.addEventListener("keydown", function (event) {
+        if (event.key === 'r') { 
+            // console.log("Key Press:" + event.key);
+            
+            // Reset
+            translationX = 0;
+            translationY = 0;
+            translationZ = 0;
+
+            rotationX = 0;
+            rotationY = 0;
+            rotationZ = 0;
+        }
+    })
 }
 
 // Logging
