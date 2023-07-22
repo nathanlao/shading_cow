@@ -18,6 +18,11 @@ var color_buffer;
 var vs_source;
 var fs_source;
 
+// Cow's translation
+var translationX = 0;
+var translationY = 0;
+var translationZ = 0;
+
 /*
  * Initialization
  */
@@ -217,9 +222,16 @@ function setUniformVariables() {
     // Get the location of the uniform variable in the shader.
     var transform_loc = gl.getUniformLocation(prog, "transform");
 
-    var model = matrix;
-    // Create a rotation matrix using the angle.
-    model = rotate(angle, [0.0, 1.0, 0.0]);
+    // Create a translation matrix (x y z).
+    var translateMatrix = mat4(
+        1.0, 0.0, 0.0, translationX,
+        0.0, 1.0, 0.0, translationY,
+        0.0, 0.0, 1.0, translationZ,
+        0.0, 0.0, 0.0, 1.0
+    );
+    
+    // Apply rotation and translation to the 3D model.
+    var model = mult(rotate(angle, [0.0, 1.0, 0.0]), translateMatrix);
 
     // Define the camera location.
     var eye = vec3(0, 0, 30);
@@ -318,6 +330,9 @@ function render(timestamp) {
 async function setup() {
     // Initialize the context.
     initializeContext();
+    
+    // Set event listeners
+    setEventListeners(canvas);
 
     // Create cow data.
     createCowData();
@@ -346,6 +361,52 @@ async function setup() {
 }
 
 window.onload = setup;
+
+function setEventListeners(canvas) {
+    // Left mouse button press to handle X and Y translation.
+    canvas.addEventListener("mousedown", function (event) {
+        var startX = event.clientX;
+        var startY = event.clientY;
+
+        function handleMouseMove(event) {
+            var currentX = event.clientX;
+            var currentY = event.clientY;
+
+            // Movement in X and Y directions.
+            var deltaX = currentX - startX;
+            var deltaY = currentY - startY;
+
+            // Update the translation values based on mouse movement.
+            translationX += deltaX * 0.01;
+            translationY -= deltaY * 0.01;
+
+            // Reset
+            startX = currentX;
+            startY = currentY;
+        }
+
+        function handleMouseUp() {
+            // Button released
+            document.removeEventListener("mousemove", handleMouseMove);
+            document.removeEventListener("mouseup", handleMouseUp);
+        }
+
+        // Attach event listeners to handle mouse movement and release.
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleMouseUp);
+    });
+
+    // Wheel to handle Z translation.
+    canvas.addEventListener("wheel", function (event) {
+        if (event.deltaY < 0) {
+            // Wheel scroll up.
+            translationZ -= 0.1;
+        } else if (event.deltaY > 0) {
+            // Wheel scroll down.
+            translationZ += 0.1;
+        }
+    }, {passive : true});
+}
 
 // Logging
 function logMessage(message) {
