@@ -449,6 +449,17 @@ function setEventListeners(canvas) {
             translationZ += 0.1;
         }
     }, {passive : true});
+
+    // Arrow left and right to handle Z rotation.
+    window.addEventListener("keydown", function(event) {
+        if (event.key === "ArrowLeft") {
+            // counterclockwise
+            rotationZ += 5.0;
+        } else if (event.key === "ArrowRight") {
+            // clockwise
+            rotationZ -= 5.0;
+        }
+    });
 }
 
 // Logging
