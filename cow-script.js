@@ -77,8 +77,8 @@ function createCowData() {
 
 // Used to represent the light source.
 var lightPositions = [
-    vec3(8, 6, 2),   // Light source 1 position
-    vec3(-1, 10, -1)  // Light source 2 position 
+    vec3(8, 6, 0),   // Light source 1 position
+    vec3(-1, 10, 0)  // Light source 2 position 
 ];
 
 function createLightSourceData() {
