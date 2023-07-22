@@ -465,17 +465,18 @@ function setEventListeners(canvas) {
     window.addEventListener("keydown", function (event) {
         if (event.key === 'r') { 
             // console.log("Key Press:" + event.key);
-            
-            // Reset
-            translationX = 0;
-            translationY = 0;
-            translationZ = 0;
-
-            rotationX = 0;
-            rotationY = 0;
-            rotationZ = 0;
+            resetCow()
         }
     })
+}
+
+function resetCow() {
+    translationX = 0.0;
+    translationY = 0.0;
+    translationZ = 0.0;
+    rotationX = 0.0;
+    rotationY = 0.0;
+    rotationZ = 0.0;
 }
 
 // Logging
