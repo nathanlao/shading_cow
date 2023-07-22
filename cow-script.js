@@ -28,29 +28,6 @@ var rotationX = 0.0;
 var rotationY = 0.0;
 var rotationZ = 0.0;
 
-/*
- * Initialization
- */
-
-function initializeContext() {
-    // Get and store the WebGL context from the canvas.
-    canvas = document.getElementById( "gl-canvas" );
-    
-    gl = WebGLUtils.setupWebGL( canvas );
-    if ( !gl ) { 
-        alert( "WebGL isn't available" ); 
-    }
-
-    gl.viewport( 0, 0, canvas.width, canvas.height );
-
-	gl.clearColor( 0.5, 0.5, 0.5, 1.0 ); // grey background color
-    
-    // Enable depth testing.
-    gl.enable(gl.DEPTH_TEST);
-
-    logMessage("WebGL initialized.");
-}
-
 function createCowData() { 
     // Get the cow vertex positions and vertex indices.
     var vertices = get_vertices();
@@ -77,7 +54,7 @@ function createCowData() {
 
 // Used to represent the light source.
 var lightPositions = [
-    vec3(8, 6, 0),   // Light source 1 position
+    // vec3(8, 6, 0),   // Light source 1 position
     vec3(-1, 10, 0)  // Light source 2 position 
 ];
 
@@ -371,6 +348,29 @@ async function setup() {
 }
 
 window.onload = setup;
+
+/*
+ * Initialization
+ */
+
+function initializeContext() {
+    // Get and store the WebGL context from the canvas.
+    canvas = document.getElementById( "gl-canvas" );
+    
+    gl = WebGLUtils.setupWebGL( canvas );
+    if ( !gl ) { 
+        alert( "WebGL isn't available" ); 
+    }
+
+    gl.viewport( 0, 0, canvas.width, canvas.height );
+
+	gl.clearColor( 0.5, 0.5, 0.5, 1.0 ); // grey background color
+    
+    // Enable depth testing.
+    gl.enable(gl.DEPTH_TEST);
+
+    logMessage("WebGL initialized.");
+}
 
 function setEventListeners(canvas) {
 
