@@ -19,14 +19,14 @@ var vs_source;
 var fs_source;
 
 // Cow's translation
-var translationX = 0;
-var translationY = 0;
-var translationZ = 0;
+var translationX = 0.0;
+var translationY = 0.0;
+var translationZ = 0.0;
 
 // Cow's rotation
-var rotationX = 0;
-var rotationY = 0;
-var rotationZ = 0;
+var rotationX = 0.0;
+var rotationY = 0.0;
+var rotationZ = 0.0;
 
 /*
  * Initialization
