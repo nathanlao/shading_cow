@@ -162,9 +162,7 @@ var prog;
 function compileShaders() {
     // vertex shader
     vs = gl.createShader(gl.VERTEX_SHADER);
-
     gl.shaderSource(vs, vs_source);
-
     gl.compileShader(vs);
     
     if (!gl.getShaderParameter(vs, gl.COMPILE_STATUS)) {
