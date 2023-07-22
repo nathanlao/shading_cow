@@ -23,6 +23,11 @@ var translationX = 0;
 var translationY = 0;
 var translationZ = 0;
 
+// Cow's rotation
+var rotationX = 0;
+var rotationY = 0;
+var rotationZ = 0;
+
 /*
  * Initialization
  */
@@ -232,6 +237,11 @@ function setUniformVariables() {
     
     // Apply rotation and translation to the 3D model.
     var model = mult(rotate(angle, [0.0, 1.0, 0.0]), translateMatrix);
+    
+    // Apply X, Y, and Z rotations to the model matrix
+    model = mult(model, rotate(rotationX, [1.0, 0.0, 0.0]));
+    model = mult(model, rotate(rotationY, [0.0, 1.0, 0.0]));
+    model = mult(model, rotate(rotationZ, [0.0, 0.0, 1.0]));
 
     // Define the camera location.
     var eye = vec3(0, 0, 30);
@@ -363,26 +373,59 @@ async function setup() {
 window.onload = setup;
 
 function setEventListeners(canvas) {
-    // Left mouse button press to handle X and Y translation.
+
+    // Prevent the context menu from showing when the right mouse button is clicked
+    canvas.addEventListener("contextmenu", function (event) {
+        event.preventDefault();
+    });
+
     canvas.addEventListener("mousedown", function (event) {
-        var startX = event.clientX;
-        var startY = event.clientY;
+        // Left mouse button press to handle X and Y translation.
+        if (event.button === 0) { 
+            console.log("left click");
 
-        function handleMouseMove(event) {
-            var currentX = event.clientX;
-            var currentY = event.clientY;
+            var startX = event.clientX;
+            var startY = event.clientY;
+    
+            function handleMouseMove(event) {
+                var currentX = event.clientX;
+                var currentY = event.clientY;
+    
+                // Movement in X and Y directions.
+                var deltaX = currentX - startX;
+                var deltaY = currentY - startY;
+    
+                // Update the translation values based on mouse movement.
+                translationX += deltaX * 0.01;
+                translationY -= deltaY * 0.01;
+    
+                // Reset
+                startX = currentX;
+                startY = currentY;
+            }
+             // Right mouse button press to handle X and Y Rotation.
+        } else if (event.button === 2) { 
+            console.log("right click");
 
-            // Movement in X and Y directions.
-            var deltaX = currentX - startX;
-            var deltaY = currentY - startY;
+            var startX = event.clientX;
+            var startY = event.clientY;
 
-            // Update the translation values based on mouse movement.
-            translationX += deltaX * 0.01;
-            translationY -= deltaY * 0.01;
+            function handleMouseMove(event) {
+                var currentX = event.clientX;
+                var currentY = event.clientY;
 
-            // Reset
-            startX = currentX;
-            startY = currentY;
+                // X, Y directions.
+                var deltaX = currentX - startX;
+                var deltaY = currentY - startY;
+
+                // Update the rotation angles.
+                rotationY += deltaX * 0.5;
+                rotationX += deltaY * 0.5;
+
+                // Reset
+                startX = currentX;
+                startY = currentY;
+            }
         }
 
         function handleMouseUp() {
