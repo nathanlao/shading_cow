@@ -413,6 +413,14 @@ function setEventListeners(canvas) {
             resetCow()
         }
     })
+    
+    // Press p to turn on and off the rotation of light
+    window.addEventListener('keydown', function(event) {
+        if (event.key === 'p' || event.key === 'P') {
+            console.log("press p")
+            // toggleLightRotation();
+        }
+    });
 }
 
 function resetCow() {
