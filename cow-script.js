@@ -235,7 +235,7 @@ function render(timestamp) {
     // Set the rendering state to use the shader program.
     gl.useProgram(prog);
 
-    // Call updateAngle.
+    // Call updateAngle for cow.
     updateAngle(timestamp);
 
     // Update uniforms.
@@ -415,10 +415,10 @@ function setEventListeners(canvas) {
     })
     
     // Press p to turn on and off the rotation of light
-    window.addEventListener('keydown', function(event) {
-        if (event.key === 'p' || event.key === 'P') {
-            console.log("press p")
-            // toggleLightRotation();
+    window.addEventListener("keydown", function(event) {
+        if (event.key === 'p') {
+            console.log("press p: ")
+            // TODO:
         }
     });
 }
