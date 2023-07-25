@@ -16,6 +16,9 @@ out vec3 fragNormal;
 // Uniform variable for the transformation matrix.
 uniform mat4 transform;
 
+// Uniform variable for the light position.
+uniform vec3 lightPosition;
+
 void main() {
     // Transform the vertex position using the transformation matrix.
     gl_Position = transform * vec4(position, 1.0f);

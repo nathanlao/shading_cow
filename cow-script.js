@@ -61,15 +61,15 @@ var spotlightPanning = true;
 
 
 // Light properties
-// var lightPosition1 = vec4(1.0, 2.0, 3.0, 1.0);
-var lightAmbient = vec4(1.0, 0.0, 0.0, 1.0);
-var lightDiffuse = vec4(1.0, 0.0, 0.0, 1.0);
-var lightSpecular = vec4(1.0, 0.0, 0.0, 1.0);
+var lightPosition1 = vec3(1.0, 2.0, 3.0);
+var lightAmbient = vec4(0.8, 0.8, 0.8, 1.0);
+var lightDiffuse = vec4(1.0, 1.0, 1.0, 1.0);
+var lightSpecular = vec4(1.0, 1.0, 1.0, 1.0);
 
 // Material properties for the Phong reflection model
-var materialAmbient = vec4(1.0, 0.0, 1.0, 1.0);
-var materialDiffuse = vec4(1.0, 0.8, 0.0, 1.0);
-var materialSpecular = vec4(1.0, 0.8, 0.0, 1.0);
+var materialAmbient = vec4(0.7, 0.4, 0.2, 1.0); // Light brown ambient color
+var materialDiffuse = vec4(0.8, 0.5, 0.3, 1.0); // Light brown diffuse color
+var materialSpecular = vec4(0.9, 0.9, 0.9, 1.0);
 var materialShininess = 1.0;
 
 // Function to update spotlight angle for auto panning
@@ -158,11 +158,11 @@ function createCowData() {
         positions.push(v2[0], v2[1], v2[2]);
         positions.push(v3[0], v3[1], v3[2]);
 
-        // black uniform color for each vertex.
-        colors.push(0.467, 0.275, 0.106, 1.0);
-        colors.push(0.467, 0.275, 0.106, 1.0);
-        colors.push(0.467, 0.275, 0.106, 1.0);
-        
+        // Light brown color for each vertex.
+        colors.push(0.498, 0.329, 0.161, 1.0);
+        colors.push(0.498, 0.329, 0.161, 1.0);
+        colors.push(0.498, 0.329, 0.161, 1.0);
+
         // Add vertex normals to the array.
         normals.push(vertexNormals[face[0] - 1][0]);
         normals.push(vertexNormals[face[0] - 1][1]);
@@ -294,7 +294,8 @@ function setUniformVariables() {
     var ambientProduct = mult(lightAmbient, materialAmbient); 
     var diffuseProduct = mult(lightDiffuse, materialDiffuse);
     var specularProduct = mult(lightSpecular, materialSpecular);
-
+    
+    gl.uniform3fv(gl.getUniformLocation(prog, "lightPosition"), flatten(lightPosition1));
     gl.uniform4fv(gl.getUniformLocation(prog, "ambientProduct"), flatten(ambientProduct));
     gl.uniform4fv(gl.getUniformLocation(prog, "diffuseProduct"), flatten(diffuseProduct));
     gl.uniform4fv(gl.getUniformLocation(prog, "specularProduct"), flatten(specularProduct));
