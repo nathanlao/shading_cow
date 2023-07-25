@@ -9,10 +9,12 @@ var angularSpeed;
 // Vertex positions and colors of the cow model
 var positions = [];
 var colors = [];
+var normals = [];
 
 // Buffer objects
 var position_buffer;
 var color_buffer;
+var normal_buffer;
 
 // Handle for the vertex array object
 var vao;
@@ -57,6 +59,18 @@ var spotlightAngle = 0.0;
 var spotlightSpeed = 30.0;
 var spotlightPanning = true; 
 
+
+// Light properties
+// var lightPosition1 = vec4(1.0, 2.0, 3.0, 1.0);
+var lightAmbient = vec4(1.0, 0.0, 0.0, 1.0);
+var lightDiffuse = vec4(1.0, 0.0, 0.0, 1.0);
+var lightSpecular = vec4(1.0, 0.0, 0.0, 1.0);
+
+// Material properties for the Phong reflection model
+var materialAmbient = vec4(1.0, 0.0, 1.0, 1.0);
+var materialDiffuse = vec4(1.0, 0.8, 0.0, 1.0);
+var materialSpecular = vec4(1.0, 0.8, 0.0, 1.0);
+var materialShininess = 1.0;
 
 // Function to update spotlight angle for auto panning
 function updateSpotlightAngle(timestamp) {
@@ -129,7 +143,10 @@ function createCowData() {
     var vertices = get_vertices();
     var faces = get_faces();
 
-    // Populate the positions and colors arrays.
+    // Compute vertex normals.
+    var vertexNormals = computeVertexNormals();
+
+    // Populate the positions, colors, and normals arrays.
     for (var i = 0; i < faces.length; i++) {
         var face = faces[i];
 
@@ -142,9 +159,22 @@ function createCowData() {
         positions.push(v3[0], v3[1], v3[2]);
 
         // black uniform color for each vertex.
-        colors.push(0.067, 0.039, 0.012, 1.0);
-        colors.push(0.067, 0.039, 0.012, 1.0);
-        colors.push(0.067, 0.039, 0.012, 1.0);
+        colors.push(0.467, 0.275, 0.106, 1.0);
+        colors.push(0.467, 0.275, 0.106, 1.0);
+        colors.push(0.467, 0.275, 0.106, 1.0);
+        
+        // Add vertex normals to the array.
+        normals.push(vertexNormals[face[0] - 1][0]);
+        normals.push(vertexNormals[face[0] - 1][1]);
+        normals.push(vertexNormals[face[0] - 1][2]);
+
+        normals.push(vertexNormals[face[1] - 1][0]); 
+        normals.push(vertexNormals[face[1] - 1][1]); 
+        normals.push(vertexNormals[face[1] - 1][2]); 
+
+        normals.push(vertexNormals[face[2] - 1][0]); 
+        normals.push(vertexNormals[face[2] - 1][1]); 
+        normals.push(vertexNormals[face[2] - 1][2]); 
     }
 }
 
@@ -182,6 +212,11 @@ function createBuffers() {
     gl.bindBuffer(gl.ARRAY_BUFFER, color_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
+    // Create a normal buffer for the vertex normals.
+    normal_buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, normal_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+
     logMessage("Created buffers.");
 }
 
@@ -210,17 +245,12 @@ function createSpotlightConeBuffers() {
 
 // Sets the uniform variables in the shader program
 function setUniformVariables() {
-    const matrix = [
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0, 1.0
-    ];
-
+    
     gl.useProgram(prog);
 
     // Get the location of the uniform variable in the shader.
     var transform_loc = gl.getUniformLocation(prog, "transform");
+    var shininess_loc = gl.getUniformLocation(prog, "shininess");
 
     // Create a translation matrix (x y z).
     var translateMatrix = mat4(
@@ -259,6 +289,16 @@ function setUniformVariables() {
     var transform = mult(projection, mult(view, model));
 
     gl.uniformMatrix4fv(transform_loc, false, flatten(transform));
+
+    // Product of light properties and material properties for Phong reflection.
+    var ambientProduct = mult(lightAmbient, materialAmbient); 
+    var diffuseProduct = mult(lightDiffuse, materialDiffuse);
+    var specularProduct = mult(lightSpecular, materialSpecular);
+
+    gl.uniform4fv(gl.getUniformLocation(prog, "ambientProduct"), flatten(ambientProduct));
+    gl.uniform4fv(gl.getUniformLocation(prog, "diffuseProduct"), flatten(diffuseProduct));
+    gl.uniform4fv(gl.getUniformLocation(prog, "specularProduct"), flatten(specularProduct));
+    gl.uniform1f(shininess_loc, materialShininess);
 }
 
 // Creates VAOs for vertex attributes
@@ -276,6 +316,12 @@ function createVertexArrayObjects() {
     gl.bindBuffer(gl.ARRAY_BUFFER, color_buffer);
     gl.vertexAttribPointer(col_idx, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(col_idx);
+
+    // Bind normal buffer and set the attribute pointer for normal.
+    var normal_idx = gl.getAttribLocation(prog, "normal");
+    gl.bindBuffer(gl.ARRAY_BUFFER, normal_buffer);
+    gl.vertexAttribPointer(normal_idx, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(normal_idx);
 
     gl.bindVertexArray(null);
 
@@ -369,7 +415,7 @@ function render(timestamp) {
     gl.bindVertexArray(cubeVAO);
     gl.drawArrays(gl.LINES, 0, cubePositions.length / 3);
 
-    // Bind the cube VAO.
+    // Bind the cone VAO.
     gl.bindVertexArray(spotlightVAO);
     // Draw the spotlight cone using TRIANGLE_FAN mode.
     gl.drawArrays(gl.TRIANGLE_FAN, 0, spotlightPositions.length / 3);
@@ -571,6 +617,35 @@ function resetCow() {
 // Function to toggle spotlight panning on/off
 function toggleSpotlightPanning() {
     spotlightPanning = !spotlightPanning;
+}
+
+// Function to compute vertex normals.
+function computeVertexNormals() {
+    var vertices = get_vertices();
+    var faces = get_faces();
+    var vertexNormals = new Array(vertices.length).fill(vec3(0.0, 0.0, 0.0));
+
+    for (var i = 0; i < faces.length; i++) {
+        var face = faces[i];
+
+        var v1 = vertices[face[0] - 1];
+        var v2 = vertices[face[1] - 1];
+        var v3 = vertices[face[2] - 1];
+
+        var normal = normalize(cross(subtract(v2, v1), subtract(v3, v1)));
+
+        // Accumulate face normals to each vertex normal.
+        vertexNormals[face[0] - 1] = add(vertexNormals[face[0] - 1], normal);
+        vertexNormals[face[1] - 1] = add(vertexNormals[face[1] - 1], normal);
+        vertexNormals[face[2] - 1] = add(vertexNormals[face[2] - 1], normal);
+    }
+
+    // Normalize all vertex normals.
+    for (var i = 0; i < vertexNormals.length; i++) {
+        vertexNormals[i] = normalize(vertexNormals[i]);
+    }
+
+    return vertexNormals;
 }
 
 function loadShaderFile(url) {
