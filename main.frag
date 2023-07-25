@@ -3,6 +3,7 @@
 // Input variables received from the vertex shader.
 in mediump vec4 fragColor;
 in mediump vec3 fragNormal;
+in mediump vec3 fragPosition;
 
 // Output variable for the final color of the pixel.
 out mediump vec4 finalColor;
@@ -23,13 +24,13 @@ void main() {
     mediump vec3 N = normalize(fragNormal);
 
     // Light vector from the fragment to the light source
-    mediump vec3 L = normalize(lightPosition - gl_FragCoord.xyz);
+    mediump vec3 L = normalize(fragPosition - lightPosition);
 
     // Reflection vector
     mediump vec3 R = reflect(-L, N);
 
     // the view vector from the fragment to the camera (eye) at (0, 0, 30)
-    mediump vec3 V = normalize(vec3(0.0, 0.0, 30.0) - gl_FragCoord.xyz);
+    mediump vec3 V = normalize(vec3(0, 0, 30) - fragPosition);
 
     // Ambient reflection.
     mediump vec3 ambient = ambientProduct.rgb * fragColor.rgb;

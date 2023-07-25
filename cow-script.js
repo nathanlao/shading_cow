@@ -40,8 +40,17 @@ var cubePositionBuffer;
 var cubeColorBuffer;
 var cubeVAO;
 
-// The cube's position
-var lightPosition = vec3(8, 5, 5); 
+var cubeTranslationX = 0.0;
+var cubeTranslationY = 0.0;
+var cubeTranslationZ = 0.0;
+
+var cubeRotationSpeed; 
+var cubePointLightEnabled; 
+var lightAngle;
+
+// The cube's initial position
+var cubePosition = vec3(8, 5, 5); 
+
 // The cone's position
 var spotlightPosition = vec3(0, 8, 0); 
 
@@ -59,9 +68,7 @@ var spotlightAngle = 0.0;
 var spotlightSpeed = 30.0;
 var spotlightPanning = true; 
 
-
 // Light properties
-var lightPosition1 = vec3(1.0, 2.0, 3.0);
 var lightAmbient = vec4(0.8, 0.8, 0.8, 1.0);
 var lightDiffuse = vec4(1.0, 1.0, 1.0, 1.0);
 var lightSpecular = vec4(1.0, 1.0, 1.0, 1.0);
@@ -70,7 +77,7 @@ var lightSpecular = vec4(1.0, 1.0, 1.0, 1.0);
 var materialAmbient = vec4(0.7, 0.4, 0.2, 1.0); // Light brown ambient color
 var materialDiffuse = vec4(0.8, 0.5, 0.3, 1.0); // Light brown diffuse color
 var materialSpecular = vec4(0.9, 0.9, 0.9, 1.0);
-var materialShininess = 1.0;
+var materialShininess = 20.0;
 
 // Function to update spotlight angle for auto panning
 function updateSpotlightAngle(timestamp) {
@@ -192,7 +199,7 @@ function createCubeData() {
 
     // Apply translation to each vertex of the cube
     for(let i=0; i<cubeVertices.length; i++) {
-        var translatedVertex = add(lightPosition, cubeVertices[i]);
+        var translatedVertex = add(cubePosition, cubeVertices[i]);
         cubePositions.push(translatedVertex[0], translatedVertex[1], translatedVertex[2]);
     }
 
@@ -295,11 +302,38 @@ function setUniformVariables() {
     var diffuseProduct = mult(lightDiffuse, materialDiffuse);
     var specularProduct = mult(lightSpecular, materialSpecular);
     
-    gl.uniform3fv(gl.getUniformLocation(prog, "lightPosition"), flatten(lightPosition1));
     gl.uniform4fv(gl.getUniformLocation(prog, "ambientProduct"), flatten(ambientProduct));
     gl.uniform4fv(gl.getUniformLocation(prog, "diffuseProduct"), flatten(diffuseProduct));
     gl.uniform4fv(gl.getUniformLocation(prog, "specularProduct"), flatten(specularProduct));
     gl.uniform1f(shininess_loc, materialShininess);
+}
+
+function setCubeUniformVariables() {
+    gl.useProgram(prog);
+
+    var transform_loc = gl.getUniformLocation(prog, "transform");
+
+    var translateMatrix = mat4(
+        1.0, 0.0, 0.0, cubeTranslationX,
+        0.0, 1.0, 0.0, cubeTranslationY,
+        0.0, 0.0, 1.0, cubeTranslationZ,
+        0.0, 0.0, 0.0, 1.0
+    );
+    
+    // Apply rotation to the cube.
+    var cubeModel = mult(rotate(lightAngle, [0.0, 1.0, 0.0]), translateMatrix);
+
+    var eye = vec3(0, 0, 30);
+    var target = vec3(0, 0, 0);
+    var up = vec3(0, 1, 0);
+    var view = lookAt(eye, target, up);
+    var aspect = canvas.width / canvas.height;
+    var projection = perspective(45.0, aspect, 0.1, 1000.0);
+    var cubeTransform = mult(projection, mult(view, cubeModel));
+
+    gl.uniformMatrix4fv(transform_loc, false, flatten(cubeTransform));
+
+    gl.uniform3fv(gl.getUniformLocation(prog, "lightPosition"), flatten(cubePosition));
 }
 
 // Creates VAOs for vertex attributes
@@ -366,6 +400,7 @@ function createSpotlightConeVAO() {
 }
 
 var previousTimestamp;
+var previousTimestampCube;
 
 function updateAngle(timestamp) {
     // Initialize previousTimestamp the first time this is called.
@@ -387,6 +422,29 @@ function updateAngle(timestamp) {
     previousTimestamp = timestamp;
 }
 
+// Function to update the light cube position for auto-rotation.
+function updateCubePosition(timestamp) {
+    if (!cubePointLightEnabled) return;
+
+    // Initialize previousTimestampLight the first time this is called.
+    if (previousTimestampCube === undefined) {
+        previousTimestampCube = timestamp;
+    }
+
+    var delta = (timestamp - previousTimestampCube) / 1000;
+
+    lightAngle += cubeRotationSpeed * delta;
+    lightAngle -= Math.floor(lightAngle / 360.0) * 360.0;
+
+    // New light position based on the angle.
+    var radius = 5.0; 
+    var lightX = radius * Math.cos(radians(lightAngle));
+    var lightZ = radius * Math.sin(radians(lightAngle));
+    cubePosition = vec3(lightX, 5.0, lightZ);
+
+    previousTimestampCube = timestamp;
+}
+
 // Draws the vertex data.
 function render(timestamp) {
     // Clear the color and depth buffers.
@@ -395,31 +453,28 @@ function render(timestamp) {
     // Set the rendering state to use the shader program.
     gl.useProgram(prog);
 
-    // Call updateAngle for cow.
+    // Update angle for cow, cube and cone
     updateAngle(timestamp);
-
-    // Call updateSpotlightAngle for auto panning cone.
+    updateCubePosition(timestamp);
     updateSpotlightAngle(timestamp);
 
-    // Update uniforms.
+    // Update uniforms, bind vao and draw cow
     setUniformVariables();
-
-    // Update uniforms for spotlight.
-    setSpotlightUniformVariables();
-
-    // Bind the VAO.
     gl.bindVertexArray(vao);
-    // Draw the correct number of vertices using the TRIANGLES mode.
     gl.drawArrays(gl.TRIANGLES, 0, positions.length / 3);
-
-    // Bind the cube VAO and draw
+    
+    // Bind the cube VAO and draw cube
+    setCubeUniformVariables();
     gl.bindVertexArray(cubeVAO);
     gl.drawArrays(gl.LINES, 0, cubePositions.length / 3);
 
-    // Bind the cone VAO.
-    gl.bindVertexArray(spotlightVAO);
-    // Draw the spotlight cone using TRIANGLE_FAN mode.
-    gl.drawArrays(gl.TRIANGLE_FAN, 0, spotlightPositions.length / 3);
+    // Update uniforms for spotlight.
+    // setSpotlightUniformVariables();
+
+    // // Bind the cone VAO.
+    // gl.bindVertexArray(spotlightVAO);
+    // // Draw the spotlight cone using TRIANGLE_FAN mode.
+    // gl.drawArrays(gl.TRIANGLE_FAN, 0, spotlightPositions.length / 3);
 
     // Call this function repeatedly with requestAnimationFrame.
     requestAnimationFrame(render);
@@ -457,6 +512,10 @@ async function setup() {
     // Initialize angle and angularSpeed.
     angle = 0.0;
     angularSpeed = 0.0;
+
+    cubePointLightEnabled = true;
+    lightAngle = 0.0;
+    cubeRotationSpeed = 30.0;
 
     // Initialize spotlight angle and spotlightOn.
     spotlightAngle = 0.0;
@@ -592,8 +651,8 @@ function setEventListeners(canvas) {
     // Press p to turn on and off the rotation of light
     window.addEventListener("keydown", function(event) {
         if (event.key === 'p') {
-            console.log("press p: ")
-            // TODO:
+            // console.log("press p: ")
+            cubePointLightEnabled = !cubePointLightEnabled
         }
     });
 

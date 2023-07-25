@@ -12,6 +12,7 @@ in vec3 normal;
 // Output variables for the fragment shader to receive the data.
 out vec4 fragColor;
 out vec3 fragNormal;
+out vec3 fragPosition;
 
 // Uniform variable for the transformation matrix.
 uniform mat4 transform;
@@ -28,4 +29,7 @@ void main() {
 
     // Pass the vertex normal to the fragment shader.
     fragNormal = normal;
+
+    // Pass the vertex position to the fragment shader.
+    fragPosition = (transform * vec4(position, 1.0f)).xyz;
 }
