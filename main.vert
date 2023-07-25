@@ -6,8 +6,12 @@ in vec3 position;
 // Input attribute for the vertex color.
 in vec4 color;
 
-// Output variable for the fragment shader to receive the color data.
+// Input attribute for the vertex normal.
+in vec3 normal;
+
+// Output variables for the fragment shader to receive the data.
 out vec4 fragColor;
+out vec3 fragNormal;
 
 // Uniform variable for the transformation matrix.
 uniform mat4 transform;
@@ -18,4 +22,7 @@ void main() {
     
     // Pass the vertex color to the fragment shader.
     fragColor = color;
+
+    // Pass the vertex normal to the fragment shader.
+    fragNormal = normal;
 }
