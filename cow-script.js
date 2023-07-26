@@ -67,7 +67,11 @@ var coneVAO;
 var coneAngle; 
 var coneSpeed;
 var conePanning; 
-var coneDirection = vec3(0, 6 ,6);
+var coneDirection;
+
+var coneTranslationX = 0.0;
+var coneTranslationY = 0.0;
+var coneTranslationZ = 0.0;
 
 // Light properties
 var lightAmbient = vec4(0.8, 0.8, 0.8, 1.0);
@@ -304,6 +308,28 @@ function setCubeUniformVariables() {
 function setConeUniformVariables() {
     gl.useProgram(prog);
 
+    var transform_loc = gl.getUniformLocation(prog, "transform");
+
+    var translateMatrix = mat4(
+        1.0, 0.0, 0.0, coneTranslationX,
+        0.0, 1.0, 0.0, coneTranslationY,
+        0.0, 0.0, 1.0, coneTranslationZ,
+        0.0, 0.0, 0.0, 1.0
+    );
+    
+    // Apply rotation to the cone.
+    var coneModel = mult(rotate(coneAngle, [0.0, 1.0, 0.0]), translateMatrix);
+
+    var eye = vec3(0, 0, 30);
+    var target = vec3(0, 0, 0);
+    var up = vec3(0, 1, 0);
+    var view = lookAt(eye, target, up);
+    var aspect = canvas.width / canvas.height;
+    var projection = perspective(45.0, aspect, 0.1, 1000.0);
+    var coneTransform = mult(projection, mult(view, coneModel));
+
+    gl.uniformMatrix4fv(transform_loc, false, flatten(coneTransform));
+
     // Set the spotlight position
     var spotlightDirection_loc = gl.getUniformLocation(prog, "spotlight_direction");
     var spotlightPosition_loc = gl.getUniformLocation(prog, "spotlight_position");
@@ -312,7 +338,7 @@ function setConeUniformVariables() {
 
     // Set the spotlight direction, position, and cutoff angle.
     var spotlightDirection = vec3(Math.cos(radians(coneAngle)), 0.0, Math.sin(radians(coneAngle)));
-    var spotlightCutoff = Math.cos(radians(11)); 
+    var spotlightCutoff = Math.cos(radians(10)); 
 
     gl.uniform3fv(spotlightDirection_loc, flatten(spotlightDirection));
     gl.uniform3fv(spotlightPosition_loc, flatten(conePosition));
@@ -441,7 +467,10 @@ function updateConeAngle(timestamp) {
     var delta = (timestamp - previousTimestampCone) / 1000;
 
     coneAngle += coneSpeed * delta;
-    coneAngle -= Math.floor(coneAngle / 360.0) * 360.0;
+
+    if (coneAngle > 100.0 || coneAngle < -100.0) {
+        coneSpeed = -coneSpeed;
+    }
 
     coneDirection = vec3(Math.cos(radians(coneAngle)), 0.0, Math.sin(radians(coneAngle)));
 
