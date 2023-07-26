@@ -74,11 +74,11 @@ var lightAmbient = vec4(0.8, 0.8, 0.8, 1.0);
 var lightDiffuse = vec4(1.0, 1.0, 1.0, 1.0);
 var lightSpecular = vec4(1.0, 1.0, 1.0, 1.0);
 
-// Material properties for the Phong reflection model
-var materialAmbient = vec4(0.7, 0.4, 0.2, 1.0); // Light brown ambient color
-var materialDiffuse = vec4(0.8, 0.5, 0.3, 1.0); // Light brown diffuse color
-var materialSpecular = vec4(0.9, 0.9, 0.9, 1.0);
-var materialShininess = 20.0;
+var materialAmbient = vec4(0.578, 0.416, 0.259, 1.0); 
+var materialDiffuse = vec4(0.658, 0.496, 0.289, 1.0);  
+var materialSpecular = vec4(0.9, 0.9, 0.9, 1.0); 
+var materialShininess = 10.0; 
+
 
 function createCowData() { 
     // Get the cow vertex positions and vertex indices.
@@ -100,10 +100,10 @@ function createCowData() {
         positions.push(v2[0], v2[1], v2[2]);
         positions.push(v3[0], v3[1], v3[2]);
 
-        // Light brown color for each vertex.
-        colors.push(0.498, 0.329, 0.161, 1.0);
-        colors.push(0.498, 0.329, 0.161, 1.0);
-        colors.push(0.498, 0.329, 0.161, 1.0);
+        // Color for each vertex.
+        colors.push(0.578, 0.416, 0.259, 1.0); 
+        colors.push(0.578, 0.416, 0.259, 1.0); 
+        colors.push(0.578, 0.416, 0.259, 1.0); 
 
         // Add vertex normals to the array.
         normals.push(vertexNormals[face[0] - 1][0]);
