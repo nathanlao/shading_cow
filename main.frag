@@ -10,9 +10,11 @@ out mediump vec4 finalColor;
 
 // Uniform variables for lighting properties.
 uniform mediump vec3 lightPosition;
-// uniform mediump vec3 lightColor;
-// uniform mediump vec3 ambientColor;
 uniform mediump float shininess;
+uniform mediump vec3 spotlight_direction;
+uniform mediump vec3 spotlight_position;
+uniform mediump float spotlightCutoff;
+uniform mediump float spotlightExponent;
 
 // Material properties for Phong reflection.
 uniform mediump vec4 ambientProduct;
@@ -26,26 +28,32 @@ void main() {
     // Light vector from the fragment to the light source
     mediump vec3 L = normalize(fragPosition - lightPosition);
 
-    // Reflection vector
-    mediump vec3 R = reflect(-L, N);
-
-    // the view vector from the fragment to the camera (eye) at (0, 0, 30)
-    mediump vec3 V = normalize(vec3(0, 0, 30) - fragPosition);
-
     // Ambient reflection.
     mediump vec3 ambient = ambientProduct.rgb * fragColor.rgb;
 
-    // Diffuse reflection using Lambertian reflection model
+    // Diffuse reflection
     mediump float diffuseIntensity = max(dot(N, L), 0.0);
     mediump vec3 diffuse = diffuseProduct.rgb * fragColor.rgb * diffuseIntensity;
 
-    // Specular reflection using Phong reflection model
+    // Specular reflection
+    mediump vec3 R = reflect(-L, N);
+    mediump vec3 V = normalize(vec3(0, 0, 30) - fragPosition);
     mediump float specularIntensity = pow(max(dot(R, V), 0.0), shininess);
     mediump vec3 specular = specularProduct.rgb * specularIntensity;
 
-    // Combine to get the final color
-    mediump vec3 finalReflection = ambient + diffuse + specular;
+    // Spotlight calculations
+    mediump vec3 L_spot = normalize(spotlight_position - fragPosition);
+    mediump float spotEffect = dot(normalize(spotlight_direction), -L_spot);
+    if(spotEffect > spotlightCutoff){
+        spotEffect = pow(spotEffect, spotlightExponent);
+    }else{
+        spotEffect = 0.0;
+    }
 
-    // Output the final color of the pixel
+    // Apply cube spotlight 
+    mediump vec3 spotlight = spotEffect * vec3(0.6, 0.706, 0.455); 
+
+    // Combine all components
+    mediump vec3 finalReflection = ambient + diffuse + specular + spotlight;
     finalColor = vec4(finalReflection, fragColor.a);
 }

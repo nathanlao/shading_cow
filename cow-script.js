@@ -51,22 +51,23 @@ var lightAngle;
 // The cube's initial position
 var cubePosition = vec3(8, 5, 5); 
 
-// The cone's position
-var spotlightPosition = vec3(0, 8, 0); 
-
 // Variables for spotlight cone
-var spotlightPositions = [];
-var spotlightColors = [];
+var conePositions = [];
+var coneColors = [];
+
+// The cone's position
+var conePosition = vec3(0, 8, 0); 
 
 // Buffer objects for spotlight cone
-var spotlightPositionBuffer;
-var spotlightColorBuffer;
-var spotlightVAO;
+var conePositionBuffer;
+var coneColorBuffer;
+var coneVAO;
 
-// Variables for spotlight panning
-var spotlightAngle = 0.0; 
-var spotlightSpeed = 30.0;
-var spotlightPanning = true; 
+// Variables for spotlight cone panning
+var coneAngle; 
+var coneSpeed;
+var conePanning; 
+var coneDirection = vec3(0, 6 ,6);
 
 // Light properties
 var lightAmbient = vec4(0.8, 0.8, 0.8, 1.0);
@@ -78,72 +79,6 @@ var materialAmbient = vec4(0.7, 0.4, 0.2, 1.0); // Light brown ambient color
 var materialDiffuse = vec4(0.8, 0.5, 0.3, 1.0); // Light brown diffuse color
 var materialSpecular = vec4(0.9, 0.9, 0.9, 1.0);
 var materialShininess = 20.0;
-
-// Function to update spotlight angle for auto panning
-function updateSpotlightAngle(timestamp) {
-    if (!spotlightPanning) return; 
-
-    var delta = (timestamp - previousTimestamp) / 1000;
-
-    spotlightAngle += spotlightSpeed * delta;
-    spotlightAngle -= Math.floor(spotlightAngle / 360.0) * 360.0;
-
-    var radiansAngle = radians(spotlightAngle);
-    var spotlightDirection = vec3(Math.sin(radiansAngle), -1.0, Math.cos(radiansAngle));
-    spotlightDirection = normalize(spotlightDirection);
-
-    var spotlightDistance = 6.0; // Distance from the cow
-    spotlightPosition[0] = spotlightDirection[0] * spotlightDistance;
-    spotlightPosition[2] = spotlightDirection[2] * spotlightDistance;
-    spotlightPosition[1] = 6.0; // Fixed height
-
-    previousTimestamp = timestamp;
-}
-
-// Function to set uniform variables for spotlight
-function setSpotlightUniformVariables() {
-    gl.useProgram(prog);
-
-    // Get the location of the uniform variables in the shader.
-    var spotlightDirection_loc = gl.getUniformLocation(prog, "spotlight_direction");
-    var spotlightPosition_loc = gl.getUniformLocation(prog, "spotlight_position");
-    var spotlightCutoff_loc = gl.getUniformLocation(prog, "spotlightCutoff");
-    var spotlightExponent_loc = gl.getUniformLocation(prog, "spotlightExponent");
-
-    // Set the spotlight direction, position, and cutoff angle.
-    var spotlightDirection = vec3(0, -1, -1); 
-    spotlightDirection = rotate(spotlightAngle, [0.0, 1.0, 0.0], spotlightDirection); 
-
-    var spotlightCutoff = Math.cos(radians(30)); // Cutoff angle of 30 degrees in radians.
-
-    gl.uniform3fv(spotlightDirection_loc, flatten(spotlightDirection));
-    gl.uniform3fv(spotlightPosition_loc, flatten(spotlightPosition));
-    gl.uniform1f(spotlightCutoff_loc, spotlightCutoff);
-    gl.uniform1f(spotlightExponent_loc, 1.0); // Angular attenuation coefficient e=1.
-}
-
-// Function to create cone vertex data for the spotlight
-function createConeData() {
-    const coneHeight = 2.0;
-    const coneRadius = 1.0; 
-    const coneSegments = 30; 
-
-    spotlightPositions = [];
-    spotlightColors = [];
-
-    // Top vertex of the cone
-    spotlightPositions.push(spotlightPosition[0], spotlightPosition[1], spotlightPosition[2]);
-
-    // Base of the cone
-    for (var i = 0; i < coneSegments; i++) {
-        var angle = (i / coneSegments) * 360.0;
-        var x = coneRadius * Math.cos(radians(angle));
-        var z = coneRadius * Math.sin(radians(angle));
-        spotlightPositions.push(spotlightPosition[0] + x, spotlightPosition[1] - coneHeight, spotlightPosition[2] + z);
-    }
-
-    spotlightColors = Array(spotlightPositions.length / 3).fill([1.0, 1.0, 0.0, 1.0]).flat();
-}
 
 function createCowData() { 
     // Get the cow vertex positions and vertex indices.
@@ -203,8 +138,37 @@ function createCubeData() {
         cubePositions.push(translatedVertex[0], translatedVertex[1], translatedVertex[2]);
     }
 
-    // Vertex colors (white)
+    // Vertex colors (black)
     cubeColors = Array(24).fill([0.067, 0.039, 0.012, 1.0]).flat();
+}
+
+// Vertex data for a wireframe cone
+function createConeData() {
+    const coneHeight = 2.0;
+    const coneRadius = 1.0; 
+    const coneSegments = 8; 
+
+    conePositions = [];
+    coneColors = [];
+
+    // Base of the cone
+    for (var i = 0; i < coneSegments; i++) {
+        var angle = (i / coneSegments) * 360.0;
+        var x = coneRadius * Math.cos(radians(angle));
+        var z = coneRadius * Math.sin(radians(angle));
+        conePositions.push(conePosition[0] + x, conePosition[1] - coneHeight, conePosition[2] + z);
+    }
+
+    conePositions.push(conePositions[0], conePositions[1], conePositions[2]);
+
+    // Lines of the cone
+    for (var i = 0; i < coneSegments; i++) {
+        var posIndex = i * 3;
+        conePositions.push(conePosition[0], conePosition[1], conePosition[2]);
+        conePositions.push(conePositions[posIndex], conePositions[posIndex + 1], conePositions[posIndex + 2]);
+    }
+
+    coneColors = Array(conePositions.length / 3).fill([0.067, 0.039, 0.012, 1.0]).flat();
 }
 
 // Creates buffers using provided data.
@@ -239,14 +203,14 @@ function createCubeBuffers() {
 }
 
 // Create buffers for the spotlight cone data.
-function createSpotlightConeBuffers() {
-    spotlightPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, spotlightPositionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(spotlightPositions), gl.STATIC_DRAW);
+function createConeBuffers() {
+    conePositionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, conePositionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(conePositions), gl.STATIC_DRAW);
 
-    spotlightColorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, spotlightColorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(spotlightColors), gl.STATIC_DRAW);
+    coneColorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, coneColorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(coneColors), gl.STATIC_DRAW);
 
 }
 
@@ -336,6 +300,26 @@ function setCubeUniformVariables() {
     gl.uniform3fv(gl.getUniformLocation(prog, "lightPosition"), flatten(cubePosition));
 }
 
+// Function to set uniform variables for spotlight
+function setConeUniformVariables() {
+    gl.useProgram(prog);
+
+    // Set the spotlight position
+    var spotlightDirection_loc = gl.getUniformLocation(prog, "spotlight_direction");
+    var spotlightPosition_loc = gl.getUniformLocation(prog, "spotlight_position");
+    var spotlightCutoff_loc = gl.getUniformLocation(prog, "spotlightCutoff");
+    var spotlightExponent_loc = gl.getUniformLocation(prog, "spotlightExponent");
+
+    // Set the spotlight direction, position, and cutoff angle.
+    var spotlightDirection = vec3(Math.cos(radians(coneAngle)), 0.0, Math.sin(radians(coneAngle)));
+    var spotlightCutoff = Math.cos(radians(11)); 
+
+    gl.uniform3fv(spotlightDirection_loc, flatten(spotlightDirection));
+    gl.uniform3fv(spotlightPosition_loc, flatten(conePosition));
+    gl.uniform1f(spotlightCutoff_loc, spotlightCutoff);
+    gl.uniform1f(spotlightExponent_loc, 1.0); // Angular attenuation coefficient 
+}
+
 // Creates VAOs for vertex attributes
 function createVertexArrayObjects() {
 
@@ -382,17 +366,17 @@ function createCubeVAO() {
 }
 
 // Create a vertex array object for the spotlight cone data.
-function createSpotlightConeVAO() {
-    spotlightVAO = gl.createVertexArray();
-    gl.bindVertexArray(spotlightVAO);
+function createConeVAO() {
+    coneVAO = gl.createVertexArray();
+    gl.bindVertexArray(coneVAO);
 
     var pos_idx = gl.getAttribLocation(prog, "position");
-    gl.bindBuffer(gl.ARRAY_BUFFER, spotlightPositionBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, conePositionBuffer);
     gl.vertexAttribPointer(pos_idx, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(pos_idx);
 
     var col_idx = gl.getAttribLocation(prog, "color");
-    gl.bindBuffer(gl.ARRAY_BUFFER, spotlightColorBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, coneColorBuffer);
     gl.vertexAttribPointer(col_idx, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(col_idx);
 
@@ -401,6 +385,7 @@ function createSpotlightConeVAO() {
 
 var previousTimestamp;
 var previousTimestampCube;
+var previousTimestampCone;
 
 function updateAngle(timestamp) {
     // Initialize previousTimestamp the first time this is called.
@@ -445,6 +430,25 @@ function updateCubePosition(timestamp) {
     previousTimestampCube = timestamp;
 }
 
+// Function to update spotlight angle for auto panning
+function updateConeAngle(timestamp) {
+    if (!conePanning) return;
+
+    if (previousTimestampCone === undefined) {
+        previousTimestampCone = timestamp;
+    }
+
+    var delta = (timestamp - previousTimestampCone) / 1000;
+
+    coneAngle += coneSpeed * delta;
+    coneAngle -= Math.floor(coneAngle / 360.0) * 360.0;
+
+    coneDirection = vec3(Math.cos(radians(coneAngle)), 0.0, Math.sin(radians(coneAngle)));
+
+    previousTimestampCone = timestamp;
+}
+
+
 // Draws the vertex data.
 function render(timestamp) {
     // Clear the color and depth buffers.
@@ -456,7 +460,7 @@ function render(timestamp) {
     // Update angle for cow, cube and cone
     updateAngle(timestamp);
     updateCubePosition(timestamp);
-    updateSpotlightAngle(timestamp);
+    updateConeAngle(timestamp);
 
     // Update uniforms, bind vao and draw cow
     setUniformVariables();
@@ -468,13 +472,10 @@ function render(timestamp) {
     gl.bindVertexArray(cubeVAO);
     gl.drawArrays(gl.LINES, 0, cubePositions.length / 3);
 
-    // Update uniforms for spotlight.
-    // setSpotlightUniformVariables();
-
-    // // Bind the cone VAO.
-    // gl.bindVertexArray(spotlightVAO);
-    // // Draw the spotlight cone using TRIANGLE_FAN mode.
-    // gl.drawArrays(gl.TRIANGLE_FAN, 0, spotlightPositions.length / 3);
+    // Update uniforms for cone, bind vao and draw cone.
+    setConeUniformVariables();
+    gl.bindVertexArray(coneVAO);
+    gl.drawArrays(gl.LINE_LOOP, 0, conePositions.length / 3);
 
     // Call this function repeatedly with requestAnimationFrame.
     requestAnimationFrame(render);
@@ -495,7 +496,7 @@ async function setup() {
     // Create cow, cube, cone buffers.
     createBuffers();
     createCubeBuffers();
-    createSpotlightConeBuffers();
+    createConeBuffers();
 
     // Load shader files.
     await loadShaders();
@@ -507,7 +508,7 @@ async function setup() {
     // Create cube VAO.
     createCubeVAO();
     // Create spotlight cone VAO.
-    createSpotlightConeVAO();
+    createConeVAO();
 
     // Initialize angle and angularSpeed.
     angle = 0.0;
@@ -518,9 +519,9 @@ async function setup() {
     cubeRotationSpeed = 30.0;
 
     // Initialize spotlight angle and spotlightOn.
-    spotlightAngle = 0.0;
-    spotlightSpeed = 30.0;
-    spotlightPanning = true;
+    coneAngle = 0.0;
+    coneSpeed = 30.0;
+    conePanning = true;
 
     // Draw!
     requestAnimationFrame(render);
@@ -638,31 +639,23 @@ function setEventListeners(canvas) {
             // clockwise
             rotationZ -= 5.0;
         }
-    });
 
-    // Press r to reset initial location and orientation.
-    window.addEventListener("keydown", function (event) {
+        // Press r to reset initial location and orientation.
         if (event.key === 'r') { 
             // console.log("Key Press:" + event.key);
             resetCow()
         }
-    })
-    
-    // Press p to turn on and off the rotation of light
-    window.addEventListener("keydown", function(event) {
+        // Press p to turn on and off the rotation of light
         if (event.key === 'p') {
-            // console.log("press p: ")
+            console.log("press p: ")
             cubePointLightEnabled = !cubePointLightEnabled
         }
-    });
-
-    // Event listener for keypress (toggle spotlight panning)
-    window.addEventListener("keydown", function (event) {
-        if (event.key === "s") {
+        //Press s to turn on and off the panning cone
+        if (event.key === 's') {
             console.log("press s: ")
-            toggleSpotlightPanning();
+            conePanning = !conePanning;
         }
-    });
+    });   
 }
 
 function resetCow() {
@@ -672,11 +665,6 @@ function resetCow() {
     rotationX = 0.0;
     rotationY = 0.0;
     rotationZ = 0.0;
-}
-
-// Function to toggle spotlight panning on/off
-function toggleSpotlightPanning() {
-    spotlightPanning = !spotlightPanning;
 }
 
 // Function to compute vertex normals.

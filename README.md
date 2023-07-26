@@ -13,3 +13,10 @@ https://www.tutorialspoint.com/how-to-disable-right-clicking-on-a-website-using-
 
 ### 3D rotation
 https://www.geeksforgeeks.org/computer-graphics-3d-rotation-transformations/
+
+### spot light
+https://webglfundamentals.org/webgl/lessons/webgl-3d-lighting-spot.html
+https://webglfundamentals.org/webgl/lessons/webgl-3d-lighting-point.html
+
+### cone
+http://voxelent.com/html/beginners-guide/chapter_2/ch2_Cone.html
